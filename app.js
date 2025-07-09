@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     // DEVELOPMENT HELPER: Uncomment the line below to reset popup for testing
-    //sessionStorage.removeItem('mailchimp_popup_shown'); // TEMPORARY - for testing only
+    sessionStorage.removeItem('mailchimp_popup_shown'); // TEMPORARY - for testing only
     
     // Check if popup should be blocked (once per session)
     function isPopupBlocked() {
@@ -171,6 +171,45 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle form submission
     const mailchimpFormElement = document.getElementById('mc-embedded-subscribe-form');
     if (mailchimpFormElement) {
+        // Enhanced tags-based tracking system
+        const existingTagsField = mailchimpFormElement.querySelector('input[name="tags"]');
+        
+        if (existingTagsField) {
+            // Get current tags value and append our tracking tags
+            const currentTags = existingTagsField.value;
+            const popupTag = 'popup';
+            const landingTag = 'ilia-landing';
+            
+            // Append new tags to existing ones
+            existingTagsField.value = currentTags + ',' + popupTag + ',' + landingTag;
+            
+            console.log('Updated tags:', existingTagsField.value); // Debug log
+        } else {
+            // Fallback: Create new tags field if it doesn't exist
+            const tagsField = document.createElement('input');
+            tagsField.type = 'hidden';
+            tagsField.name = 'tags';
+            tagsField.value = 'popup,ilia-landing';
+            mailchimpFormElement.appendChild(tagsField);
+            
+            console.log('Created new tags field with:', tagsField.value); // Debug log
+        }
+        
+        // Also add merge fields as backup tracking
+        const hiddenLandingField = document.createElement('input');
+        hiddenLandingField.type = 'hidden';
+        hiddenLandingField.name = 'PORTALSLUG';
+        hiddenLandingField.value = 'ilia-landing';
+        hiddenLandingField.id = 'mce-PORTALSLUG';
+        mailchimpFormElement.appendChild(hiddenLandingField);
+        
+        const hiddenPopupField = document.createElement('input');
+        hiddenPopupField.type = 'hidden';
+        hiddenPopupField.name = 'SLIDESLUG';
+        hiddenPopupField.value = 'popup';
+        hiddenPopupField.id = 'mce-SLIDESLUG';
+        mailchimpFormElement.appendChild(hiddenPopupField);
+        
         mailchimpFormElement.addEventListener('submit', function(e) {
             // Validate required fields
             const emailField = document.getElementById('mce-EMAIL');
@@ -178,6 +217,13 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (!emailField.value.trim() || !nameField.value.trim()) {
                 return false;
+            }
+            
+            // Debug: Log all form data before submission
+            const formData = new FormData(mailchimpFormElement);
+            console.log('Form submission data:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}: ${value}`);
             }
             
             setTimeout(() => {
