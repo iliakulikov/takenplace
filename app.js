@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     // DEVELOPMENT HELPER: Uncomment the line below to reset popup for testing
-    sessionStorage.removeItem('mailchimp_popup_shown'); // TEMPORARY - for testing only
+    //sessionStorage.removeItem('mailchimp_popup_shown'); // TEMPORARY - for testing only
     
     // Check if popup should be blocked (once per session)
     function isPopupBlocked() {
@@ -171,31 +171,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle form submission
     const mailchimpFormElement = document.getElementById('mc-embedded-subscribe-form');
     if (mailchimpFormElement) {
-        // Enhanced tags-based tracking system
-        const existingTagsField = mailchimpFormElement.querySelector('input[name="tags"]');
+        // The original tags field has numeric tag IDs: 3257680,3959801
+        // We need to rely on merge fields for string-based tracking since Mailchimp tags require exact IDs
         
-        if (existingTagsField) {
-            // Get current tags value and append our tracking tags
-            const currentTags = existingTagsField.value;
-            const popupTag = 'popup';
-            const landingTag = 'ilia-landing';
-            
-            // Append new tags to existing ones
-            existingTagsField.value = currentTags + ',' + popupTag + ',' + landingTag;
-            
-            console.log('Updated tags:', existingTagsField.value); // Debug log
-        } else {
-            // Fallback: Create new tags field if it doesn't exist
-            const tagsField = document.createElement('input');
-            tagsField.type = 'hidden';
-            tagsField.name = 'tags';
-            tagsField.value = 'popup,ilia-landing';
-            mailchimpFormElement.appendChild(tagsField);
-            
-            console.log('Created new tags field with:', tagsField.value); // Debug log
-        }
+        console.log('Original tags field preserved with IDs: 3257680,3959801');
         
-        // Also add merge fields as backup tracking
+        // Use merge fields for reliable string-based tracking
         const hiddenLandingField = document.createElement('input');
         hiddenLandingField.type = 'hidden';
         hiddenLandingField.name = 'PORTALSLUG';
@@ -203,12 +184,15 @@ document.addEventListener('DOMContentLoaded', function() {
         hiddenLandingField.id = 'mce-PORTALSLUG';
         mailchimpFormElement.appendChild(hiddenLandingField);
         
-        const hiddenPopupField = document.createElement('input');
-        hiddenPopupField.type = 'hidden';
-        hiddenPopupField.name = 'SLIDESLUG';
-        hiddenPopupField.value = 'popup';
-        hiddenPopupField.id = 'mce-SLIDESLUG';
-        mailchimpFormElement.appendChild(hiddenPopupField);
+        // Add a source tracking field
+        const sourceField = document.createElement('input');
+        sourceField.type = 'hidden';
+        sourceField.name = 'SOURCE';
+        sourceField.value = 'ilia-landing-popup';
+        sourceField.id = 'mce-SOURCE';
+        mailchimpFormElement.appendChild(sourceField);
+        
+        console.log('Added merge field tracking: PORTALSLUG=ilia-landing, SOURCE=ilia-landing-popup');
         
         mailchimpFormElement.addEventListener('submit', function(e) {
             // Validate required fields
